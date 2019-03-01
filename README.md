@@ -16,4 +16,4 @@ Ready to embark on this adventure of a lab? We’ll guide you through setting up
 
 _For this lab, you will need an account on either [Amazon Web Services](https://aws.amazon.com/) (AWS) or [Google Cloud Platform](https://cloud.google.com/) (GCP). Both have free tiers/credits that you can use._
 
-CONTINUE [HERE](http://cs.co/adventure) TO GET STARTED
+## CONTINUE [HERE](http://cs.co/adventure) TO GET STARTED
