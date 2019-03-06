@@ -72,7 +72,7 @@ def device_status(session, headers, payload, api_key):
                     message = message[:-2]
 
             if alerting > 0:
-                message += f'  \n- _{alerting} ⚠️ alerting_ ({alerting / total * 1004:.1f}%)'
+                message += f'  \n- _{alerting} ⚠️ alerting_ ({alerting / total * 100:.1f}%)'
                 if alerting <= 10:
                     message += ': '
                     for device in alerting_devices:
