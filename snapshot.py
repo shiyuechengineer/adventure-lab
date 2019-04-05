@@ -87,4 +87,4 @@ def return_snapshots(session, headers, payload, api_key, net_id, message, camera
             post_file(session, headers, payload, f'[{name}]({video})', snapshot)
     except:
         post_message(session, headers, payload,
-                     'Does your API key have write access to the specified network ID, with cameras running firmware 3.25+ & NFO applied? 😳')
+                     'Does your API key have write access to the specified network ID, with cameras running firmware 3.25 or higher? 😳')
