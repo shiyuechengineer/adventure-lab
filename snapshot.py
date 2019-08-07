@@ -1,13 +1,10 @@
-from datetime import datetime
-from datetime import timedelta
-import json
 import time
 
 from chatbot import *
 
 
 # For Meraki network, return cameras' snapshots (optionally only for filtered cameras)
-def meraki_snapshots(session, api_key, net_id, time=None, filters=None):
+def meraki_snapshots(session, api_key, net_id, timestamp=None, filters=None):
     # Get devices of network and filter for MV cameras
     headers = {
         'X-Cisco-Meraki-API-Key': api_key,
@@ -28,9 +25,9 @@ def meraki_snapshots(session, api_key, net_id, time=None, filters=None):
             continue
 
         # Get video link
-        if time:
+        if timestamp:
             response = session.get(
-                f'https://api.meraki.com/api/v0/networks/{net_id}/cameras/{camera["serial"]}/videoLink?timestamp={time}',
+                f'https://api.meraki.com/api/v0/networks/{net_id}/cameras/{camera["serial"]}/videoLink?timestamp={timestamp}',
                 headers=headers)
         else:
             response = session.get(
@@ -39,19 +36,12 @@ def meraki_snapshots(session, api_key, net_id, time=None, filters=None):
         video_link = response.json()['url']
 
         # Get snapshot link
-        if time:
-            # Shift actual timestamp requested forward into future by some seconds, to account for beta feature's offset
-            # now = datetime.strptime(time, '%Y-%m-%dT%H:%M:%SZ')
-            # offset = 15
-            # later = now + timedelta(seconds=offset)
-            # time = later.isoformat() + 'Z'
-
-            # Original algorithm
+        if timestamp:
             headers['Content-Type'] = 'application/json'
             response = session.post(
                 f'https://api.meraki.com/api/v0/networks/{net_id}/cameras/{camera["serial"]}/snapshot',
                 headers=headers,
-                data=json.dumps({'timestamp': time}))
+                json={'timestamp': timestamp})
         else:
             response = session.post(
                 f'https://api.meraki.com/api/v0/networks/{net_id}/cameras/{camera["serial"]}/snapshot',
@@ -87,4 +77,4 @@ def return_snapshots(session, headers, payload, api_key, net_id, message, camera
             post_file(session, headers, payload, f'[{name}]({video})', snapshot)
     except:
         post_message(session, headers, payload,
-                     'Does your API key have write access to the specified network ID, with cameras running firmware 3.25 or higher? 😳')
+                     'Does your API key have write access to the specified network ID with cameras? 😳')
