@@ -77,6 +77,8 @@ if __name__ == '__main__':
                 message += f'  \n- _{network["name"]}_: **{device["name"]}** - {device["model"]}'
             else:
                 message += f'  \n- _{network["name"]}_: **{device["mac"]}** - {device["model"]}'
+    else:
+        message = 'All tagged devices are ✅ online!'
 
     # Send message to user
     headers = {
