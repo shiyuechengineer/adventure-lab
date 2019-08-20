@@ -6,10 +6,7 @@ from chatbot import *
 # For Meraki network, return cameras' snapshots (optionally only for filtered cameras)
 def meraki_snapshots(session, api_key, net_id, timestamp=None, filters=None):
     # Get devices of network and filter for MV cameras
-    headers = {
-        'X-Cisco-Meraki-API-Key': api_key,
-        # 'Content-Type': 'application/json'  # issue where this is only needed if timestamp specified
-    }
+    headers = {'X-Cisco-Meraki-API-Key': api_key, 'Content-Type': 'application/json'}
     response = session.get(f'https://api.meraki.com/api/v0/networks/{net_id}/devices', headers=headers)
     devices = response.json()
     cameras = [device for device in devices if device['model'][:2] == 'MV']
@@ -37,7 +34,6 @@ def meraki_snapshots(session, api_key, net_id, timestamp=None, filters=None):
 
         # Get snapshot link
         if timestamp:
-            headers['Content-Type'] = 'application/json'
             response = session.post(
                 f'https://api.meraki.com/api/v0/networks/{net_id}/cameras/{camera["serial"]}/snapshot',
                 headers=headers,
@@ -50,6 +46,8 @@ def meraki_snapshots(session, api_key, net_id, timestamp=None, filters=None):
         # Possibly no snapshot if camera offline, photo not retrievable, etc.
         if response.ok:
             snapshots.append((name, response.json()['url'], video_link))
+        else:
+            snapshots.append((name, None, video_link))
 
     return snapshots
 
@@ -69,12 +67,32 @@ def return_snapshots(session, headers, payload, api_key, net_id, message, camera
                          '📷 _Retrieving camera snapshots..._')
             snapshots = meraki_snapshots(session, api_key, net_id, None, cameras)
 
-        # Wait a bit to ensure cameras to upload snapshots to links
-        time.sleep(9)
-
         # Send cameras names with files (URLs)
         for (name, snapshot, video) in snapshots:
-            post_file(session, headers, payload, f'[{name}]({video})', snapshot)
+            if snapshot:
+                attempts = 10
+                while attempts > 0:
+                    r = session.get(snapshot, stream=True)
+                    if r.ok:
+                        print(f'Retried {10 - attempts} times')
+                        temp_file = f'/tmp/{name}.jpg'
+                        with open(temp_file, 'wb') as f:
+                            for chunk in r:
+                                f.write(chunk)
+
+                        # Send snapshot without analysis
+                        send_file(session, headers, payload, f'[{name}]({video})', temp_file, file_type='image/jpg')
+
+                        # Analyze & send snapshot
+                        # pass
+
+                        break
+                    else:
+                        time.sleep(1)
+                        attempts -= 1
+            else:
+                post_message(session, headers, payload,
+                             f'Error with snapshot for camera **{name}**')
     except:
         post_message(session, headers, payload,
                      'Does your API key have write access to the specified network ID with cameras? 😳')
