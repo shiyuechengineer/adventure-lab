@@ -84,15 +84,20 @@ def return_snapshots(session, headers, payload, api_key, net_id, message, camera
                         send_file(session, headers, payload, f'[{name}]({video})', temp_file, file_type='image/jpg')
 
                         # Analyze & send snapshot
-                        # pass
+                        pass
 
                         break
                     else:
                         time.sleep(1)
                         attempts -= 1
+                # Snapshot GET with URL did not return any image
+                if attempts == 0:
+                    post_message(session, headers, payload,
+                                 f'GET error with snapshot for camera **{name}**')
             else:
+                # Snapshot POST was not successful in retrieving image URL
                 post_message(session, headers, payload,
-                             f'Error with snapshot for camera **{name}**')
+                             f'POST error with snapshot for camera **{name}**')
     except:
         post_message(session, headers, payload,
                      'Does your API key have write access to the specified network ID with cameras? 😳')
