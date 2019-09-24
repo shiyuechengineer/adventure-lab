@@ -8,9 +8,9 @@ from requests_toolbelt.multipart.encoder import MultipartEncoder
 base_url = 'https://api.meraki.com/api/v0'
 
 # Webex Teams bot token
-token = 'MzNkMzdjOTItNzNlOC00NTY0LTliNzItZWE3MDRmYmM2NDM5OTUyYzU3ODktYTU5_PF84_1eb65fdf-9643-417f-9974-ad72cae0e10f'
+token = ''
 # Your email address on Webex Teams
-email = 'shiychen@cisco.com'
+email = ''
 
 
 # List the organizations that the user has privileges on
