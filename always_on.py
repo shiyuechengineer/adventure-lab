@@ -14,8 +14,8 @@ def gather_credentials():
         cam_key = cp.get('meraki', 'key2')
         chatbot_token = cp.get('chatbot', 'token')
         user_email = cp.get('chatbot', 'email')
-        org_id = cp.get('organization', 'id')
-        on_tag = cp.get('organization', 'tag')
+        org_id = cp.get('meraki', 'organization')
+        on_tag = cp.get('meraki', 'tag1')
     except:
         print('Missing credentials or input file!')
         sys.exit(2)
@@ -49,6 +49,15 @@ if __name__ == '__main__':
     (api_key, chatbot_token, user_email, org_id, on_tag) = gather_credentials()
     session = requests.Session()
 
+    # Webex Teams data
+    headers = {
+        'content-type': 'application/json; charset=utf-8',
+        'authorization': f'Bearer {chatbot_token}'
+    }
+    payload = {
+        'toPersonEmail': user_email
+    }
+
     # Get org data
     devices = get_org_devices(session, api_key, org_id)
     statuses = get_org_statuses(session, api_key, org_id)
@@ -81,12 +90,4 @@ if __name__ == '__main__':
         message = 'All tagged devices are ✅ online!'
 
     # Send message to user
-    headers = {
-        'content-type': 'application/json; charset=utf-8',
-        'authorization': f'Bearer {chatbot_token}'
-    }
-    payload = {
-        'toPersonEmail': user_email,
-        'markdown': message
-    }
     post_message(session, headers, payload, message)
