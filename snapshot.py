@@ -155,7 +155,7 @@ def return_snapshots(session, headers, payload, api_key, org_id, message, labels
         online = [d['serial'] for d in statuses if d['status'] == 'online']
 
         # All cameras in the org that are online
-        if message_contains(message, ['all', 'complete', 'entire', 'every', 'full']):
+        if message_contains(message, ['all', 'complete', 'entire', 'every', 'full']) or not labels:
             post_message(session, headers, payload,
                          '📸 _Retrieving all cameras\' snapshots..._')
             online_cams = []
