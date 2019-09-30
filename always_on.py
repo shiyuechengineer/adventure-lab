@@ -23,6 +23,7 @@ def gather_credentials():
 
 
 # List the devices in an organization
+# https://api.meraki.com/api_docs#list-the-devices-in-an-organization
 def get_org_devices(session, api_key, org_id):
     headers = {'X-Cisco-Meraki-API-Key': api_key, 'Content-Type': 'application/json'}
     response = session.get(f'https://api.meraki.com/api/v0/organizations/{org_id}/devices', headers=headers)
@@ -30,6 +31,7 @@ def get_org_devices(session, api_key, org_id):
 
 
 # List the status of every Meraki device in the organization
+# https://api.meraki.com/api_docs#list-the-status-of-every-meraki-device-in-the-organization
 def get_org_statuses(session, api_key, org_id):
     headers = {'X-Cisco-Meraki-API-Key': api_key, 'Content-Type': 'application/json'}
     response = session.get(f'https://api.meraki.com/api/v0/organizations/{org_id}/deviceStatuses', headers=headers)
@@ -37,6 +39,7 @@ def get_org_statuses(session, api_key, org_id):
 
 
 # List the networks in an organization
+# https://api.meraki.com/api_docs#list-the-networks-in-an-organization
 def get_org_networks(session, api_key, org_id):
     headers = {'X-Cisco-Meraki-API-Key': api_key, 'Content-Type': 'application/json'}
     response = session.get(f'https://api.meraki.com/api/v0/organizations/{org_id}/networks', headers=headers)

@@ -2,15 +2,20 @@ from statistics import mean
 
 from chatbot import *
 
+LOSS_THRESHOLD = 7.0
+LATENCY_THRESHOLD = 49.0
 
-# Call GET: https://api.meraki.com/api_docs#list-the-organizations-that-the-user-has-privileges-on
+
+# List the organizations that the user has privileges on
+# https://api.meraki.com/api_docs#list-the-organizations-that-the-user-has-privileges-on
 def get_organizations(session, api_key):
     headers = {'X-Cisco-Meraki-API-Key': api_key}
     response = session.get(f'https://api.meraki.com/api/v0/organizations', headers=headers)
     return response.json()
 
 
-# Call GET: https://api.meraki.com/api_docs#list-the-status-of-every-meraki-device-in-the-organization
+# List the status of every Meraki device in the organization
+# https://api.meraki.com/api_docs#list-the-status-of-every-meraki-device-in-the-organization
 def get_device_statuses(session, api_key, org_id):
     headers = {'X-Cisco-Meraki-API-Key': api_key}
     response = session.get(f'https://api.meraki.com/api/v0/organizations/{org_id}/deviceStatuses', headers=headers)
@@ -22,7 +27,8 @@ def get_device_statuses(session, api_key, org_id):
         return None
 
 
-# Call GET to new feature: /organizations/{{organizationId}}/uplinksLossAndLatency
+# Return the uplink loss and latency for every MX in the organization from at latest 2 minutes ago
+# https://api.meraki.com/api_docs#return-the-uplink-loss-and-latency-for-every-mx-in-the-organization-from-at-latest-2-minutes-ago
 def get_orgs_uplinks(session, api_key, org_id):
     headers = {'X-Cisco-Meraki-API-Key': api_key}
     response = session.get(f'https://api.meraki.com/api/v0/organizations/{org_id}/uplinksLossAndLatency', headers=headers)
@@ -72,7 +78,7 @@ def device_status(session, headers, payload, api_key):
                     message = message[:-2]
 
             if alerting > 0:
-                message += f'  \n- _{alerting} ⚠️ alerting_ ({alerting / total * 100:.1f}%)'
+                message += f'  \n- _{alerting} ⚠️ alerting_ ({alerting / total * 1004:.1f}%)'
                 if alerting <= 10:
                     message += ': '
                     for device in alerting_devices:
@@ -113,8 +119,6 @@ def device_status(session, headers, payload, api_key):
         if uplinks:
 
             # Tally up uplinks with worse performance than thresholds here
-            loss_threshold = 7.0
-            latency_threshold = 240.0
             loss_count = 0
             latency_count = 0
 
@@ -122,19 +126,19 @@ def device_status(session, headers, payload, api_key):
                 perf = uplink['timeSeries']
 
                 loss = mean([sample['lossPercent'] for sample in perf])
-                if loss > loss_threshold and loss < 100.0:  # ignore probes to unreachable IPs that are incorrectly configured
+                if loss > LOSS_THRESHOLD and loss < 100.0:  # ignore probes to unreachable IPs that are incorrectly configured
                     loss_count += 1
 
                 latency = mean([sample['latencyMs'] for sample in perf])
-                if latency > latency_threshold:
+                if latency > LATENCY_THRESHOLD:
                     latency_count += 1
 
             if loss_count > 0:
                 post_message(session, headers, payload,
-                             f'{loss_count} device-uplink-probes currently have 🕳 packet loss higher than **{loss_threshold:.1f}%**!')
+                             f'{loss_count} device-uplink-probes currently have 🕳 packet loss higher than **{LOSS_THRESHOLD:.1f}%**!')
             if latency_count > 0:
                 post_message(session, headers, payload,
-                             f'{latency_count} device-uplink-probes currently have 🐢 latency higher than **{latency_threshold:.1f} ms**!')
+                             f'{latency_count} device-uplink-probes currently have 🐢 latency higher than **{LATENCY_THRESHOLD:.1f} ms**!')
 
     if not responded:
         post_message(session, headers, payload,

@@ -79,8 +79,6 @@ def analyze_image(file_name):
 def gcp_vision(session, headers, payload, file, message='', folder=None):
     # Structure file path correctly
     file_path = f'{folder}/{file}' if folder else f'{file}'
-    if folder == 'tmp':
-        file_path = f'/{file_path}'
 
     # Analyze and annotate file type
     analysis = analyze_image(file_path)

@@ -8,6 +8,7 @@ from chatbot import *
 LOSS_THRESHOLD = 7.0
 LATENCY_THRESHOLD = 49.0
 
+
 # Store credentials in a separate file
 def gather_credentials():
     cp = configparser.ConfigParser()
@@ -25,6 +26,7 @@ def gather_credentials():
 
 
 # List the devices in an organization
+# https://api.meraki.com/api_docs#list-the-devices-in-an-organization
 def get_org_devices(session, api_key, org_id):
     headers = {'X-Cisco-Meraki-API-Key': api_key, 'Content-Type': 'application/json'}
     response = session.get(f'https://api.meraki.com/api/v0/organizations/{org_id}/devices', headers=headers)
@@ -32,6 +34,7 @@ def get_org_devices(session, api_key, org_id):
 
 
 # List the status of every Meraki device in the organization
+# https://api.meraki.com/api_docs#list-the-status-of-every-meraki-device-in-the-organization
 def get_org_statuses(session, api_key, org_id):
     headers = {'X-Cisco-Meraki-API-Key': api_key, 'Content-Type': 'application/json'}
     response = session.get(f'https://api.meraki.com/api/v0/organizations/{org_id}/deviceStatuses', headers=headers)
@@ -39,6 +42,7 @@ def get_org_statuses(session, api_key, org_id):
 
 
 # List the networks in an organization
+# https://api.meraki.com/api_docs#list-the-networks-in-an-organization
 def get_org_networks(session, api_key, org_id):
     headers = {'X-Cisco-Meraki-API-Key': api_key, 'Content-Type': 'application/json'}
     response = session.get(f'https://api.meraki.com/api/v0/organizations/{org_id}/networks', headers=headers)
@@ -46,6 +50,7 @@ def get_org_networks(session, api_key, org_id):
 
 
 # Return the uplink loss and latency for every MX in the organization from at latest 2 minutes ago
+# https://api.meraki.com/api_docs#return-the-uplink-loss-and-latency-for-every-mx-in-the-organization-from-at-latest-2-minutes-ago
 def get_appliance_perf(session, api_key, org_id):
     headers = {'X-Cisco-Meraki-API-Key': api_key, 'Content-Type': 'application/json'}
     response = session.get(f'https://api.meraki.com/api/v0/organizations/{org_id}/uplinksLossAndLatency', headers=headers)
@@ -88,14 +93,18 @@ if __name__ == '__main__':
         data_wan2 = [u for u in data if u['uplink'] == 'wan2']
         for (wan_data, text) in [(data_wan1, 'WAN1'), (data_wan2, 'WAN2')]:
             if wan_data:
-                total_loss  = 0
+                total_loss = 0
+                loss_samples = 0
                 total_latency = 0
+                latency_samples = 0
                 for tuple in wan_data:
                     for sample in tuple['timeSeries']:
                         total_loss += sample['lossPercent']
+                        loss_samples += 1
                         total_latency += sample['latencyMs']
-                average_loss = total_loss / len(wan_data) / 5
-                average_latency = total_latency / len(wan_data) / 5
+                        latency_samples += 1
+                average_loss = total_loss / loss_samples
+                average_latency = total_latency / latency_samples
 
                 # High packet loss
                 if average_loss > LOSS_THRESHOLD:

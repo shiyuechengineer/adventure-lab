@@ -1,103 +1,196 @@
-import time
+from datetime import datetime
+
+import pytz
+import requests
 
 from chatbot import *
+from status import *
 
 
-# For Meraki network, return cameras' snapshots (optionally only for filtered cameras)
-def meraki_snapshots(session, api_key, net_id, timestamp=None, filters=None):
-    # Get devices of network and filter for MV cameras
+# List the devices in an organization
+# https://api.meraki.com/api_docs#list-the-devices-in-an-organization
+def get_org_devices(session, api_key, org_id):
     headers = {'X-Cisco-Meraki-API-Key': api_key, 'Content-Type': 'application/json'}
-    response = session.get(f'https://api.meraki.com/api/v0/networks/{net_id}/devices', headers=headers)
-    devices = response.json()
-    cameras = [device for device in devices if device['model'][:2] == 'MV']
+    response = session.get(f'https://api.meraki.com/api/v0/organizations/{org_id}/devices', headers=headers)
+    return response.json()
+
+
+# Returns video link to the specified camera. If a timestamp is supplied, it links to that timestamp.
+# https://api.meraki.com/api_docs#returns-video-link-to-the-specified-camera
+def get_video_link(api_key, net_id, serial, timestamp=None, session=None):
+    headers = {'X-Cisco-Meraki-API-Key': api_key, 'Content-Type': 'application/json'}
+
+    if not session:
+        session = requests.Session()
+
+    if timestamp:
+        response = session.get(
+            f'https://api.meraki.com/api/v0/networks/{net_id}/cameras/{serial}/videoLink?timestamp={timestamp}',
+            headers=headers
+        )
+    else:
+        response = session.get(
+            f'https://api.meraki.com/api/v0/networks/{net_id}/cameras/{serial}/videoLink',
+            headers=headers
+        )
+
+    if response.ok:
+        video_link = response.json()['url']
+        return video_link
+    else:
+        return None
+
+
+# Generate a snapshot of what the camera sees at the specified time and return a link to that image.
+# https://api.meraki.com/api_docs#generate-a-snapshot-of-what-the-camera-sees-at-the-specified-time-and-return-a-link-to-that-image
+def generate_snapshot(api_key, net_id, serial, timestamp=None, session=None):
+    headers = {'X-Cisco-Meraki-API-Key': api_key, 'Content-Type': 'application/json'}
+
+    if not session:
+        session = requests.Session()
+
+    if timestamp:
+        response = session.post(
+            f'https://api.meraki.com/api/v0/networks/{net_id}/cameras/{serial}/snapshot',
+            headers=headers,
+            json={'timestamp': timestamp}
+        )
+    else:
+        response = session.post(
+            f'https://api.meraki.com/api/v0/networks/{net_id}/cameras/{serial}/snapshot',
+            headers=headers
+        )
+
+    if response.ok:
+        snapshot_link = response.json()['url']
+        return snapshot_link
+    else:
+        return None
+
+
+# List the devices in a network
+# https://api.meraki.com/api_docs#list-the-devices-in-a-network
+def get_network_devices(api_key, net_id, session=None):
+    headers = {'X-Cisco-Meraki-API-Key': api_key, 'Content-Type': 'application/json'}
+
+    if not session:
+        session = requests.Session()
+
+    response = session.get(
+        f'https://api.meraki.com/api/v0/networks/{net_id}/devices',
+        headers=headers
+    )
+
+    if response.ok:
+        return response.json()
+    else:
+        return None
+
+
+# Return a network
+# https://api.meraki.com/api_docs#return-a-network
+def get_network(api_key, net_id, session=None):
+    headers = {'X-Cisco-Meraki-API-Key': api_key, 'Content-Type': 'application/json'}
+
+    if not session:
+        session = requests.Session()
+
+    response = session.get(
+        f'https://api.meraki.com/api/v0/networks/{net_id}',
+        headers=headers
+    )
+
+    if response.ok:
+        return response.json()
+    else:
+        return None
+
+
+# Retrieve cameras' snapshots, links to video, and timestamps in local time zone
+def meraki_snapshots(session, api_key, timestamp=None, cameras=None):
+    # Temporarily store mappings of networks to their time zones
+    network_times = {}
 
     # Assemble return data
     snapshots = []
     for camera in cameras:
-        # Remove any cameras not matching filtered names
-        name = camera['name'] if 'name' in camera else camera['mac']
-        tags = camera['tags'] if 'tags' in camera else ''
-        tags = tags.split()
-        if filters and name not in filters and not set(filters).intersection(tags):
-            continue
+        net_id = camera['networkId']
+        serial = camera['serial']
+        cam_name = camera['name'] if 'name' in camera and camera['name'] else serial
+
+        # Get time zone
+        if net_id not in network_times:
+            time_zone = get_network(api_key, net_id, session)['timeZone']
+            network_times[net_id] = time_zone
+        else:
+            time_zone = network_times[net_id]
 
         # Get video link
-        if timestamp:
-            response = session.get(
-                f'https://api.meraki.com/api/v0/networks/{net_id}/cameras/{camera["serial"]}/videoLink?timestamp={timestamp}',
-                headers=headers)
-        else:
-            response = session.get(
-                f'https://api.meraki.com/api/v0/networks/{net_id}/cameras/{camera["serial"]}/videoLink',
-                headers=headers)
-        video_link = response.json()['url']
+        video_link = get_video_link(api_key, net_id, serial, timestamp, session)
 
         # Get snapshot link
-        if timestamp:
-            response = session.post(
-                f'https://api.meraki.com/api/v0/networks/{net_id}/cameras/{camera["serial"]}/snapshot',
-                headers=headers,
-                json={'timestamp': timestamp})
-        else:
-            response = session.post(
-                f'https://api.meraki.com/api/v0/networks/{net_id}/cameras/{camera["serial"]}/snapshot',
-                headers=headers)
+        snapshot_link = generate_snapshot(api_key, net_id, serial, timestamp, session)
 
-        # Possibly no snapshot if camera offline, photo not retrievable, etc.
-        if response.ok:
-            snapshots.append((name, response.json()['url'], video_link))
+        # Add timestamp to file name
+        if not timestamp:
+            utc_now = pytz.utc.localize(datetime.utcnow())
+            local_now = utc_now.astimezone(pytz.timezone(time_zone))
+            file_name = cam_name + ' - ' + local_now.strftime('%Y-%m-%d_%H-%M-%S')
         else:
-            snapshots.append((name, None, video_link))
+            file_name = cam_name
+
+        # Add to list of snapshots to send
+        snapshots.append((cam_name, file_name, snapshot_link, video_link))
 
     return snapshots
 
 
 # Determine whether to retrieve all cameras or just selected snapshots
-def return_snapshots(session, headers, payload, api_key, net_id, message, cameras):
+def return_snapshots(session, headers, payload, api_key, org_id, message, labels):
     try:
-        # All cameras
+        # Get org's devices
+        devices = get_org_devices(session, api_key, org_id)
+        cameras = [d for d in devices if d['model'][:2] == 'MV']
+        statuses = get_device_statuses(session, api_key, org_id)
+        online = [d['serial'] for d in statuses if d['status'] == 'online']
+
+        # All cameras in the org that are online
         if message_contains(message, ['all', 'complete', 'entire', 'every', 'full']):
             post_message(session, headers, payload,
                          '📸 _Retrieving all cameras\' snapshots..._')
-            snapshots = meraki_snapshots(session, api_key, net_id, None, None)
+            online_cams = []
+            for c in cameras:
+                if c['serial'] in online:
+                    online_cams.append(c)
+            snapshots = meraki_snapshots(session, api_key, None, online_cams)
 
-        # Or just specified/filtered ones
+        # Or just specified/filtered ones, skipping those that do not match filtered names/tags
         else:
             post_message(session, headers, payload,
                          '📷 _Retrieving camera snapshots..._')
-            snapshots = meraki_snapshots(session, api_key, net_id, None, cameras)
+            filtered_cams = []
+            for c in cameras:
+                if 'name' in c and c['name'] in labels:
+                    filtered_cams.append(c)
+                elif 'tags' in c and set(labels).intersection(c['tags'].split()):
+                    filtered_cams.append(c)
+            snapshots = meraki_snapshots(session, api_key, None, filtered_cams)
 
         # Send cameras names with files (URLs)
-        for (name, snapshot, video) in snapshots:
+        for (cam_name, file_name, snapshot, video) in snapshots:
             if snapshot:
-                attempts = 10
-                while attempts > 0:
-                    r = session.get(snapshot, stream=True)
-                    if r.ok:
-                        print(f'Retried {10 - attempts} times')
-                        temp_file = f'/tmp/{name}.jpg'
-                        with open(temp_file, 'wb') as f:
-                            for chunk in r:
-                                f.write(chunk)
-
-                        # Send snapshot without analysis
-                        send_file(session, headers, payload, f'[{name}]({video})', temp_file, file_type='image/jpg')
-
-                        # Analyze & send snapshot
-                        pass
-
-                        break
-                    else:
-                        time.sleep(1)
-                        attempts -= 1
+                temp_file = download_file(session, file_name, snapshot)
+                if temp_file:
+                    # Send snapshot without analysis
+                    send_file(session, headers, payload, f'[{cam_name}]({video})', temp_file, file_type='image/jpg')
                 # Snapshot GET with URL did not return any image
-                if attempts == 0:
+                else:
                     post_message(session, headers, payload,
-                                 f'GET error with snapshot for camera **{name}**')
+                                 f'GET error with retrieving snapshot for camera **{cam_name}**')
             else:
                 # Snapshot POST was not successful in retrieving image URL
                 post_message(session, headers, payload,
-                             f'POST error with snapshot for camera **{name}**')
+                             f'POST error with requesting snapshot for camera **{cam_name}**')
     except:
         post_message(session, headers, payload,
                      'Does your API key have write access to the specified network ID with cameras? 😳')
