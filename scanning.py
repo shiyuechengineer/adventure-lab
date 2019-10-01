@@ -40,7 +40,7 @@ def get_json():
     if not request.json or not 'data' in request.json:
         return 'invalid data', 400
     data = request.json
-    print(f'Received POST with {data["type"]}, {data["version"]}')
+    print(f'Received POST: {data["type"]}, {data["version"]}')
 
     # Verify secret
     if data['secret'] != SECRET:
