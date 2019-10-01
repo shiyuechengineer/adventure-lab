@@ -12,7 +12,8 @@ Ready to embark on this adventure of a lab? We’ll guide you through setting up
 - Returning Meraki dashboard [webhooks](https://documentation.meraki.com/zGeneral_Administration/Other_Topics/Webhooks)
 - Triggering dashboard webhooks on-demand
 - People counting with [MV Sense](https://documentation.meraki.com/MV/Video_Analytics/MV_Sense) MQTT
-- Automated org-wide reporting for offline devices
+- [Scanning API](https://developer.cisco.com/meraki/scanning-api/) location services
+- Automated reporting of device statuses & uplink performance
 
 
 _For this lab, you will need an account on either [Amazon Web Services](https://aws.amazon.com/) (AWS) or [Google Cloud Platform](https://cloud.google.com/) (GCP). Both have free tiers/credits that you can use._
