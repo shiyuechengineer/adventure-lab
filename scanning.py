@@ -10,8 +10,8 @@ from flask import request
 app = Flask(__name__)
 
 # Create folder for scanning API logs
-if 'scanning_logs' not in os.listdir():
-    os.mkdir('scanning_logs')
+if 'logs' not in os.listdir():
+    os.mkdir('logs')
 
 
 # Store credentials in a separate file
@@ -51,16 +51,16 @@ def get_json():
 
     # Save data locally to logs folder
     file_name = f'{datetime.now():%Y-%m-%d_%H-%M-%S}.json'
-    with open(f'scanning_logs/{file_name}', 'w') as fp:
+    with open(f'logs/{file_name}', 'w') as fp:
         json.dump(data, fp)
     print(f'Saved locally: {file_name}\n')
 
     # Delete any logs, keeping only the latest 100
-    log_files = os.listdir('scanning_logs/')
+    log_files = os.listdir('logs/')
     if len(log_files) > 100:
         log_files.sort()
         for file in log_files[:-100]:
-            os.remove(f'scanning_logs/{file}')
+            os.remove(f'logs/{file}')
 
     # Return success message
     return 'Scanning API POST received', 200
