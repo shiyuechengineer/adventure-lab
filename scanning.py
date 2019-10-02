@@ -50,7 +50,11 @@ def get_json():
         print(f'Secret verified: {data["secret"]}')
 
     # Save data locally to logs folder
-    file_name = f'{datetime.now():%Y-%m-%d_%H-%M-%S}.json'
+    if data['type'] == 'BluetoothDevicesSeen':
+        data_type = 'Bluetooth'
+    else:
+        data_type = 'WiFi'
+    file_name = f'{datetime.now():%Y-%m-%d_%H-%M-%S}_{data_type}.json'
     with open(f'logs/{file_name}', 'w') as fp:
         json.dump(data, fp)
     print(f'Saved locally: {file_name}\n')
