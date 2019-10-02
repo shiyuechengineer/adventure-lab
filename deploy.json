@@ -1,0 +1,77 @@
+{
+    "roomId": "",
+    "markdown": "To provision clients, you'll need to view this message in a supported [Webex Teams](https://www.webex.com/downloads.html) desktop or web application.",
+    "attachments": [
+        {
+            "contentType": "application/vnd.microsoft.card.adaptive",
+            "content": {
+                "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+                "type": "AdaptiveCard",
+                "version": "1.0",
+                "body": [
+                    {
+                        "type": "ColumnSet",
+                        "columns": [
+                            {
+                                "type": "Column",
+                                "width": 2,
+                                "items": [
+                                    {
+                                        "type": "TextBlock",
+                                        "text": "Meraki Provisioning via Chatbot",
+                                        "weight": "Bolder",
+                                        "size": "Medium"
+                                    },
+                                    {
+                                        "type": "TextBlock",
+                                        "text": "Fill in the form 📝 below to create a network and deploy devices:",
+                                        "isSubtle": true,
+                                        "wrap": true
+                                    },
+                                    {
+                                        "type": "TextBlock",
+                                        "text": "Location (network name)",
+                                        "wrap": true
+                                    },
+                                    {
+                                        "type": "Input.Text",
+                                        "id": "myLocation",
+                                        "placeholder": "San Francisco, CA"
+                                    },
+                                    {
+                                        "type": "TextBlock",
+                                        "text": "Street address (optional)",
+                                        "wrap": true
+                                    },
+                                    {
+                                        "type": "Input.Text",
+                                        "id": "myAddress",
+                                        "placeholder": "500 Terry Francois Blvd",
+                                        "style": "Address"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "Column",
+                                "width": 1,
+                                "items": [
+                                    {
+                                        "type": "Image",
+                                        "url": "https://meraki.cisco.com/img/cisco-meraki-logo.png",
+                                        "size": "auto"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                "actions": [
+                    {
+                        "type": "Action.Submit",
+                        "title": "Submit"
+                    }
+                ]
+            }
+        }
+    ]
+}

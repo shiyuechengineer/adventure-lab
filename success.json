@@ -1,0 +1,62 @@
+{
+    "roomId": "",
+    "markdown": "To provision clients, you'll need to view this message in a supported [Webex Teams](https://www.webex.com/downloads.html) desktop or web application.",
+    "attachments": [
+        {
+            "contentType": "application/vnd.microsoft.card.adaptive",
+            "content": {
+                "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+                "type": "AdaptiveCard",
+                "version": "1.0",
+                "body": [
+                    {
+                        "type": "ColumnSet",
+                        "columns": [
+                            {
+                                "type": "Column",
+                                "width": 2,
+                                "items": [
+                                    {
+                                        "type": "TextBlock",
+                                        "text": "Success"
+                                    },
+                                    {
+                                        "type": "TextBlock",
+                                        "text": "Meraki Provisioning via Chatbot",
+                                        "weight": "bolder",
+                                        "size": "Medium",
+                                        "spacing": "none"
+                                    },
+                                    {
+                                        "type": "TextBlock",
+                                        "text": "Network created and devices deployed!",
+                                        "isSubtle": true,
+                                        "size": "Large",
+                                        "wrap": true
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "Column",
+                                "width": 1,
+                                "items": [
+                                    {
+                                        "type": "Image",
+                                        "url": "https://www.iconsdb.com/icons/download/guacamole-green/thumbs-up-3-512.png",
+                                        "size": "auto"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                "actions": [
+                    {
+                        "type": "Action.Submit",
+                        "title": "Provision another network"
+                    }
+                ]
+            }
+        }
+    ]
+}

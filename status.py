@@ -5,39 +5,103 @@ from chatbot import *
 LOSS_THRESHOLD = 7.0
 LATENCY_THRESHOLD = 49.0
 
+base_url = 'https://api.meraki.com/api/v0'
 
 # List the organizations that the user has privileges on
 # https://api.meraki.com/api_docs#list-the-organizations-that-the-user-has-privileges-on
 def get_organizations(session, api_key):
     headers = {'X-Cisco-Meraki-API-Key': api_key}
-    response = session.get(f'https://api.meraki.com/api/v0/organizations', headers=headers)
-    return response.json()
+    response = session.get(f'{base_url}/organizations', headers=headers)
+    return response.json() if response.ok else None
 
 
 # List the status of every Meraki device in the organization
 # https://api.meraki.com/api_docs#list-the-status-of-every-meraki-device-in-the-organization
 def get_device_statuses(session, api_key, org_id):
     headers = {'X-Cisco-Meraki-API-Key': api_key}
-    response = session.get(f'https://api.meraki.com/api/v0/organizations/{org_id}/deviceStatuses', headers=headers)
-
-    # Filter out orgs that do not have dashboard API access enabled, on the Organization > Settings page
-    if response.ok:
-        return response.json()
-    else:
-        return None
+    response = session.get(f'{base_url}/organizations/{org_id}/deviceStatuses', headers=headers)
+    return response.json() if response.ok else None
 
 
 # Return the uplink loss and latency for every MX in the organization from at latest 2 minutes ago
 # https://api.meraki.com/api_docs#return-the-uplink-loss-and-latency-for-every-mx-in-the-organization-from-at-latest-2-minutes-ago
 def get_orgs_uplinks(session, api_key, org_id):
     headers = {'X-Cisco-Meraki-API-Key': api_key}
-    response = session.get(f'https://api.meraki.com/api/v0/organizations/{org_id}/uplinksLossAndLatency', headers=headers)
+    response = session.get(f'{base_url}/organizations/{org_id}/uplinksLossAndLatency', headers=headers)
+    return response.json() if response.ok else None
 
-    # Filter out orgs that do not have dashboard API access or the NFO enabled
-    if response.ok:
-        return response.json()
-    else:
-        return None
+
+# Return the inventory for an organization
+# https://api.meraki.com/api_docs#return-the-inventory-for-an-organization
+def get_org_inventory(session, api_key, org_id):
+    headers = {'X-Cisco-Meraki-API-Key': api_key}
+    response = session.get(f'{base_url}/organizations/{org_id}/inventory', headers=headers)
+    return response.json() if response.ok else None
+
+
+# List the networks in an organization
+# https://api.meraki.com/api_docs#list-the-networks-in-an-organization
+def get_networks(session, api_key, org_id, configTemplateId=None):
+    get_url = f'{base_url}/organizations/{org_id}/networks'
+    headers = {'X-Cisco-Meraki-API-Key': api_key, 'Content-Type': 'application/json'}
+    if configTemplateId:
+        get_url += f'?configTemplateId={configTemplateId}'
+    response = session.get(get_url, headers=headers)
+    return response.json() if response.ok else None
+
+
+# List the networks in an organization
+# https://api.meraki.com/api_docs#list-the-networks-in-an-organization
+def get_networks(session, api_key, org_id, configTemplateId=None):
+    get_url = f'{base_url}/organizations/{org_id}/networks'
+    headers = {'X-Cisco-Meraki-API-Key': api_key, 'Content-Type': 'application/json'}
+    if configTemplateId:
+        get_url += f'?configTemplateId={configTemplateId}'
+    response = session.get(get_url, headers=headers)
+    return response.json() if response.ok else None
+
+
+# Create a network
+# https://api.meraki.com/api_docs#create-a-network
+def create_network(session, api_key, org_id, name=None, type=None, tags=None, timeZone=None,
+                   copyFromNetworkId=None, disableMyMerakiCom=None, disableRemoteStatusPage=None):
+    post_url = f'{base_url}/organizations/{org_id}/networks'
+    headers = {'X-Cisco-Meraki-API-Key': api_key, 'Content-Type': 'application/json'}
+
+    variables = ['name', 'type', 'tags', 'timeZone', 'copyFromNetworkId', 'disableMyMerakiCom', 'disableRemoteStatusPage']
+    payload = {key: value for (key, value) in locals().items()
+               if key in variables and value is not None}
+
+    response = session.post(post_url, headers=headers, json=payload)
+    return response.json() if response.ok else None
+
+
+# Claim a device into a network
+# https://api.meraki.com/api_docs#claim-a-device-into-a-network
+def claim_device(session, api_key, net_id, serial):
+    post_url = f'{base_url}/networks/{net_id}/devices/claim'
+    headers = {'X-Cisco-Meraki-API-Key': api_key, 'Content-Type': 'application/json'}
+
+    payload = {'serial': serial}
+
+    response = session.post(post_url, headers=headers, json=payload)
+    return True if response.ok else False
+
+
+# Update the attributes of a device
+# https://api.meraki.com/api_docs#update-the-attributes-of-a-device
+def update_device(session, api_key, net_id, serial, name=None, tags=None, lat=None, lng=None, address=None, notes=None,
+                  moveMapMarker=None, switchProfileId=None, floorPlanId=None):
+    put_url = f'{base_url}/networks/{net_id}/devices/{serial}'
+    headers = {'X-Cisco-Meraki-API-Key': api_key, 'Content-Type': 'application/json'}
+
+    variables = ['name', 'tags', 'lat', 'lng', 'address', 'notes', 'moveMapMarker', 'switchProfileId', 'floorPlanId']
+    payload = {key: value for (key, value) in locals().items()
+               if key in variables and value is not None}
+
+    response = session.put(put_url, headers=headers, json=payload)
+    print(payload)
+    return response.json() if response.ok else response.status_code, response.text
 
 
 # Return device status for each org
