@@ -7,6 +7,7 @@ LATENCY_THRESHOLD = 49.0
 
 base_url = 'https://api.meraki.com/api/v0'
 
+
 # List the organizations that the user has privileges on
 # https://api.meraki.com/api_docs#list-the-organizations-that-the-user-has-privileges-on
 def get_organizations(session, api_key):

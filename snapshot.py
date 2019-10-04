@@ -147,55 +147,53 @@ def meraki_snapshots(session, api_key, timestamp=None, cameras=None):
 
 # Determine whether to retrieve all cameras or just selected snapshots
 def return_snapshots(session, headers, payload, api_key, org_id, message, labels):
-    # try:
-    # Get org's devices
-    devices = get_org_devices(session, api_key, org_id)
-    cameras = [d for d in devices if d['model'][:2] == 'MV']
-    statuses = get_device_statuses(session, api_key, org_id)
-    online = [d['serial'] for d in statuses if d['status'] == 'online']
+    try:
+        # Get org's devices
+        devices = get_org_devices(session, api_key, org_id)
+        cameras = [d for d in devices if d['model'][:2] == 'MV']
+        statuses = get_device_statuses(session, api_key, org_id)
+        online = [d['serial'] for d in statuses if d['status'] == 'online']
 
-    # All cameras in the org that are online
-    if message_contains(message, ['all', 'complete', 'entire', 'every', 'full']) or not labels:
-        post_message(session, headers, payload,
-                     '📸 _Retrieving all cameras\' snapshots..._')
-        online_cams = []
-        for c in cameras:
-            if c['serial'] in online:
-                online_cams.append(c)
-        snapshots = meraki_snapshots(session, api_key, None, online_cams)
-
-    # Or just specified/filtered ones, skipping those that do not match filtered names/tags
-    else:
-        post_message(session, headers, payload,
-                     '📷 _Retrieving camera snapshots..._')
-        filtered_cams = []
-        for c in cameras:
-            if 'name' in c and c['name'] in labels:
-                filtered_cams.append(c)
-            elif 'tags' in c and set(labels).intersection(c['tags'].split()):
-                filtered_cams.append(c)
-        snapshots = meraki_snapshots(session, api_key, None, filtered_cams)
-
-    # Send cameras names with files (URLs)
-    for (cam_name, file_name, snapshot, video) in snapshots:
-        if snapshot:
-            temp_file = download_file(session, file_name, snapshot)
-            if temp_file:
-                # Send snapshot without analysis
-                send_file(session, headers, payload, f'[{cam_name}]({video})', temp_file, file_type='image/jpg')
-
-                # Send to computer vision API for analysis
-                pass
-            # Snapshot GET with URL did not return any image
-            else:
-                post_message(session, headers, payload,
-                             f'GET error with retrieving snapshot for camera **{cam_name}**')
-        else:
-            # Snapshot POST was not successful in retrieving image URL
+        # All cameras in the org that are online
+        if message_contains(message, ['all', 'complete', 'entire', 'every', 'full']) or not labels:
             post_message(session, headers, payload,
-                         f'POST error with requesting snapshot for camera **{cam_name}**')
-    '''
+                        '📸 _Retrieving all cameras\' snapshots..._')
+            online_cams = []
+            for c in cameras:
+                if c['serial'] in online:
+                    online_cams.append(c)
+            snapshots = meraki_snapshots(session, api_key, None, online_cams)
+
+        # Or just specified/filtered ones, skipping those that do not match filtered names/tags
+        else:
+            post_message(session, headers, payload,
+                        '📷 _Retrieving camera snapshots..._')
+            filtered_cams = []
+            for c in cameras:
+                if 'name' in c and c['name'] in labels:
+                    filtered_cams.append(c)
+                elif 'tags' in c and set(labels).intersection(c['tags'].split()):
+                    filtered_cams.append(c)
+            snapshots = meraki_snapshots(session, api_key, None, filtered_cams)
+
+        # Send cameras names with files (URLs)
+        for (cam_name, file_name, snapshot, video) in snapshots:
+            if snapshot:
+                temp_file = download_file(session, file_name, snapshot)
+                if temp_file:
+                    # Send snapshot without analysis
+                    send_file(session, headers, payload, f'[{cam_name}]({video})', temp_file, file_type='image/jpg')
+
+                    # Send to computer vision API for analysis
+                    pass
+                # Snapshot GET with URL did not return any image
+                else:
+                    post_message(session, headers, payload,
+                                f'GET error with retrieving snapshot for camera **{cam_name}**')
+            else:
+                # Snapshot POST was not successful in retrieving image URL
+                post_message(session, headers, payload,
+                            f'POST error with requesting snapshot for camera **{cam_name}**')
     except:
         post_message(session, headers, payload,
                      'Does your API key have write access to the specified network ID with cameras? 😳')
-    '''
