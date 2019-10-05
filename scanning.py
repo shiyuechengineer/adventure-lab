@@ -51,7 +51,7 @@ def get_json():
 
     # Save data locally to logs folder
     if data['type'] == 'BluetoothDevicesSeen':
-        data_type = 'Bluetooth'
+        data_type = 'Blue'
     else:
         data_type = 'WiFi'
     file_name = f'{datetime.now():%Y-%m-%d_%H-%M-%S}_{data_type}.json'

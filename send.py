@@ -68,7 +68,7 @@ if __name__ == '__main__':
         time_now = datetime.now()
         just_now = time_now - timedelta(minutes=5)
         for log in logs:
-            log_time = datetime.strptime(log[:-5], '%Y-%m-%d_%H-%M-%S')
+            log_time = datetime.strptime(log[:-10], '%Y-%m-%d_%H-%M-%S')
             if log_time > just_now:
                 recent_logs.append(log)
         if recent_logs:
