@@ -17,6 +17,11 @@ from group_policies import policies
 from group_policies_z import policies_z
 
 
+# Webex Teams information if not storing in separate credentials.ini file
+BOT_TOKEN = ''
+USER_EMAIL = ''
+
+
 # Create networks using action batches
 def create_networks(api_key, org_id, sites, locations, custom_tags, time_zones):
     # See if "Demo - ISP" exists
@@ -328,6 +333,8 @@ def main():
         email = cp.get('chatbot', 'email')
     # Ask user to input API key and check org access
     except:
+        token = BOT_TOKEN
+        email = USER_EMAIL
         while True:
             api_key = input('Enter your Meraki dashboard API key with full read/write org-wide access to an organization with API enabled: ')
             (ok, orgs) = get_user_orgs(api_key)
