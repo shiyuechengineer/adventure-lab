@@ -7,11 +7,6 @@ from requests_toolbelt.multipart.encoder import MultipartEncoder
 
 base_url = 'https://api.meraki.com/api/v0'
 
-# Webex Teams bot token
-token = ''
-# Your email address on Webex Teams
-email = ''
-
 
 # List the organizations that the user has privileges on
 # https://api.meraki.com/api_docs#list-the-organizations-that-the-user-has-privileges-on
@@ -191,14 +186,14 @@ def open_ssid(api_key, net_id, number, name):
 
 
 # Send a message in Webex Teams
-def post_message(url, message):
+def post_message(url, message, token, email):
     headers = {'content-type': 'application/json; charset=utf-8', 'authorization': f'Bearer {token}'}
     payload = {'toPersonEmail': email, 'file': url, 'markdown': message}
     requests.post('https://api.ciscospark.com/v1/messages/', headers=headers, json=payload)
 
 
 # Send a message with file attached from local storage
-def send_file(message, file_path, file_type='text/plain'):
+def send_file(message, file_path, file_type, token, email):
     # file_type such as 'image/png'
     m = MultipartEncoder({'toPersonEmail': email,
                           'markdown': message,
