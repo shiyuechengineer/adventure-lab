@@ -196,4 +196,4 @@ def return_snapshots(session, headers, payload, api_key, org_id, message, labels
                             f'POST error with requesting snapshot for camera **{cam_name}**')
     except:
         post_message(session, headers, payload,
-                     'Does your API key have write access to the specified network ID with cameras? 😳')
+                     'Does your API key have write access to the specified organization ID with cameras? 😳')
