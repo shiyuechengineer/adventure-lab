@@ -172,7 +172,7 @@ def batch_devices(actions, net_id, serials_ips, vlan):
                 'body': {
                     'wan1': {
                         'usingStaticIp': True,
-                        'vlan': vlan if '.2' in ip else '',  # no VLAN tag for AP
+                        'vlan': vlan if '.2' in ip else None,  # no VLAN tag for AP
                         'staticIp': ip,
                         'staticGatewayIp': ip[:-1] + '1',  # strip last digit, and use MX which is .1
                         'staticSubnetMask': '255.255.255.0',
